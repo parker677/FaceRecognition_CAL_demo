@@ -6,4 +6,4 @@ deepface==0.0.75
 qrcode==7.4.2
 Pillow==10.0.0
 tensorflow==2.13.0
-distutils
+setuptools
