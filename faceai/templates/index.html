@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顔から分かる動物タイプ診断</title>
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f6fa;
+            font-family: sans-serif,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+        }
+
+        .app-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+
+        .submit-btn {
+            flex: 1;                /* 동일한 너비 */
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background-color: #667eea;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background-color: #556cd6;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;              /* 버튼 사이 간격 */
+            margin-top: 10px;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .highlight {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fef3c7;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .animal-name {
+            color: #e17055;           /* 포인트 컬러 (일본 앱에서 자주 쓰는 코랄) */
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .file-label {
+            flex: 1;                /* 동일한 너비 */
+            padding: 12px;
+            background-color: #e5e7eb;
+            color: #111;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .file-label:hover {
+            background-color: #d1d5db;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <h1>顔から分かる動物タイプ</h1>
+        <p class="subtitle">AIがあなたの顔から動物タイプを診断！</p>
+        <p class="guide">写真を選択し、「診断する」を押してください。</p>
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" id="imageInput" name="image" accept="image/*" required hidden>
+            <div class="button-row">
+                <label for="imageInput" class="file-label">写真を選択</label>
+                <button type="submit" class="submit-btn">診断する</button>
+            </div>
+        </form>
+
+
+{% if qr_image %}
+    <div class="qr-section">
+        <h2>スマホでもご利用いただけます。</h2>
+        <p class="qr-description">QRコードをスキャンしてください。</p>
+        <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code">
+        <p class="qr-note">※ スマホのカメラアプリで読み取ってください。</p>
+    </div>
+{% endif %}
+
+        {% if face_image %}
+            <h2>写真から検出された顔</h2>
+            <img src="{{ face_image }}" alt="Detected Face">
+
+            {% if prediction_results %}
+                <h2>診断結果</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>動物タイプ</th>
+                            <th>確率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in prediction_results %}
+                            <tr>
+                                <td>{{ result.animal }}</td>
+                                <td>{{ result.probability | round(2) }}%</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% set top_result = prediction_results | max(attribute='probability') %}
+                <div class="highlight">
+                    あなたは <span class="animal-name">{{ top_result.animal }}</span> タイプです 🐾
+                </div>
+            {% else %}
+                <p class="error-message">
+                    診断結果を表示できませんでした。
+                </p>
+            {% endif %}
+
+        {% elif request.method == "POST" %}
+            <p class="error-message">
+                顔を認識できませんでした。<br>
+                別の写真をアップロードしてください。
+            </p>
+        {% endif %}
+    </div>
+</body>
+</html>
